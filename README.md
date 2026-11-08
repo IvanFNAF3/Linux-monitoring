@@ -77,27 +77,10 @@ journalctl -u linux-monitoring-agent -f
 - `GET  /api/dashboard/summary` — сводка по машинам
 - `GET  /api/dashboard/history/{machine_id}?limit=100` — история для графика
 
-## Разработка без Docker
+## Запуск приложухи через Docker Compose
 
-```bash
-# backend
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+- `docker compose up --build` - забилдить докер композ
+- http://localhost:3000 - перейти в графическую часть, вылезет форма авторизации. Пока пользователь только 1, логин admin пароль admin. Всё хранится в файлике .env
 
-# orchestrator
-cd orchestrator
-uvicorn app.main:app --reload --port 8100
-
-# bff
-cd bff
-uvicorn app.main:app --reload --port 8200
-
-# frontend
-cd frontend
-npm install
-npm run dev
-```
 
 Для локального запуска backend укажите `DATABASE_URL` на доступный PostgreSQL.
