@@ -1,19 +1,33 @@
-import hmac
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 from app.core.config import settings
+from app.repositories import users as users_repo
+
 
 bearer_scheme = HTTPBearer(auto_error=False)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def authenticate(username: str, password: str) -> bool:
-    return hmac.compare_digest(
-        username, settings.admin_username
-    ) and hmac.compare_digest(password, settings.admin_password)
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+async def authenticate(username: str, password: str) -> str | None:
+    user = await users_repo.get_by_username(username)
+    if user is None or not user["is_active"]:
+        return None
+    if not verify_password(password, user["password_hash"]):
+        return None
+    return user["username"]
 
 
 def create_access_token(subject: str) -> str:
@@ -24,7 +38,7 @@ def create_access_token(subject: str) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> str:
     unauthorized = HTTPException(
@@ -47,4 +61,8 @@ def get_current_user(
     username = payload.get("sub")
     if not isinstance(username, str) or not username:
         raise unauthorized
-    return username
+
+    user = await users_repo.get_by_username(username)
+    if user is None or not user["is_active"]:
+        raise unauthorized
+    return user["username"]
