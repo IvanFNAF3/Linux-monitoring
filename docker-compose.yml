@@ -56,10 +56,14 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-jwt-secret}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DATABASE_DSN: ${DATABASE_DSN:-postgresql://monitoring:monitoring@postgres:5432/monitoring}
     ports:
       - "${BFF_PORT:-8200}:8200"
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
 
   frontend:
     build:

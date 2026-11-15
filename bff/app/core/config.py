@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60
     admin_username: str = "admin"
     admin_password: str = "admin"
+    database_dsn: str = "postgresql://monitoring:monitoring@localhost:5432/monitoring"
 
 
 settings = Settings()

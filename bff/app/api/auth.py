@@ -19,8 +19,8 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest) -> TokenResponse:
-    if not authenticate(payload.username, payload.password):
+async def login(payload: LoginRequest) -> TokenResponse:
+    if not await authenticate(payload.username, payload.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",

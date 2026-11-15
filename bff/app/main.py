@@ -1,13 +1,28 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
 from app.core.config import settings
+from app.repositories import users as users_repo
+from app.services.auth_service import get_password_hash
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await users_repo.create_default_user(
+        username=settings.admin_username,
+        password_hash=get_password_hash(settings.admin_password),
+    )
+    yield
+
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
